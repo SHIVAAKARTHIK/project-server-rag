@@ -1,0 +1,15 @@
+supabase
+fastapi
+uvicorn
+python-dotenv
+clerk_backend_api
+svix
+boto3
+celery
+redis
+python-magic
+langchain==0.3.27
+langchain-community==0.3.27
+langchain-openai==0.3.28
+unstructured[all-docs]==0.18.11
+scrapingbee

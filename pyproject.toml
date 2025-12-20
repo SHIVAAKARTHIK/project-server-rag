@@ -1,0 +1,29 @@
+[project]
+name = "server-rag"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13,<4.0"
+dependencies = [
+    "boto3>=1.42.11",
+    "celery>=5.6.0",
+    "clerk-backend-api>=4.2.0",
+    "fastapi>=0.124.4",
+    "langchain==0.3.27",
+    "langchain-community==0.3.27",
+    "langchain-openai==0.3.28",
+    "python-dotenv>=1.2.1",
+    "python-magic>=0.4.27",
+    "redis>=7.1.0",
+    "scrapingbee>=2.0.2",
+    "supabase>=2.27.0",
+    "svix>=1.83.0",
+    "unstructured[all-docs]==0.18.11",
+    "uvicorn>=0.38.0",
+]
+[tool.pyright]
+typeCheckingMode = "off"
+
+[tool.ruff]
+line-length = 100
+ignore = ["E501"]  # Ignore line too long

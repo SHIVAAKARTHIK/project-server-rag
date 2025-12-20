@@ -1,0 +1,123 @@
+# =============================================================================
+# Six Figure RAG - Docker Compose Configuration
+# =============================================================================
+# Usage:
+#   Development: docker-compose up -d
+#   Production:  docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # FastAPI Application
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: six-figure-rag-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    volumes:
+      - ./src:/app/src:ro
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+    networks:
+      - rag-network
+
+  # ---------------------------------------------------------------------------
+  # Redis (Cache & Celery Broker)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: six-figure-rag-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - rag-network
+
+  # ---------------------------------------------------------------------------
+  # Celery Worker (Document Processing)
+  # ---------------------------------------------------------------------------
+  celery-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.celery
+    container_name: six-figure-rag-celery-worker
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src:ro
+    command: celery -A src.tasks.celery_app worker --loglevel=info --concurrency=2
+    restart: unless-stopped
+    networks:
+      - rag-network
+
+  # ---------------------------------------------------------------------------
+  # Celery Beat (Scheduled Tasks)
+  # ---------------------------------------------------------------------------
+  celery-beat:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.celery
+    container_name: six-figure-rag-celery-beat
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src:ro
+    command: celery -A src.tasks.celery_app beat --loglevel=info
+    restart: unless-stopped
+    networks:
+      - rag-network
+
+  # ---------------------------------------------------------------------------
+  # Flower (Celery Monitoring Dashboard)
+  # ---------------------------------------------------------------------------
+  flower:
+    image: mher/flower:2.0
+    container_name: six-figure-rag-flower
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
+      - FLOWER_PORT=5555
+    depends_on:
+      - redis
+      - celery-worker
+    restart: unless-stopped
+    networks:
+      - rag-network
+
+# -----------------------------------------------------------------------------
+# Volumes
+# -----------------------------------------------------------------------------
+volumes:
+  redis_data:
+    driver: local
+
+# -----------------------------------------------------------------------------
+# Networks
+# -----------------------------------------------------------------------------
+networks:
+  rag-network:
+    driver: bridge
