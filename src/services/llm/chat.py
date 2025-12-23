@@ -1,7 +1,7 @@
 from typing import List, Any, Optional
 from functools import lru_cache
 
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage,BaseMessage
 
 from src.services.llm.providers.openrouter import OpenRouterProvider
 from src.config import settings
@@ -55,6 +55,7 @@ class ChatService:
         Returns:
             LLM response content
         """
+        
         messages = [SystemMessage(content=system_prompt)]
         
         if images:
@@ -66,15 +67,19 @@ class ChatService:
                 if img_base64.startswith("data:image"):
                     img_base64 = img_base64.split(",", 1)[1]
                 
-                content_parts.append({
+                content_parts.append({  # pyright: ignore[reportArgumentType]
                     "type": "image_url",
                     "image_url": {"url": f"data:image/jpeg;base64,{img_base64}"}
                 })
             
-            messages.append(HumanMessage(content=content_parts))
+            user_message = HumanMessage(content=content_parts)  # pyright: ignore[reportArgumentType]
         else:
-            messages.append(HumanMessage(content=user_query))
+            user_message = HumanMessage(content=content_parts)  # pyright: ignore[reportUnboundVariable]
         
+        messages: List[BaseMessage] = [
+        SystemMessage(content=system_prompt),
+        user_message
+    ]
         return self.provider.invoke_with_images(messages)
 
 

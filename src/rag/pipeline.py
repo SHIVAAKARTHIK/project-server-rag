@@ -70,6 +70,7 @@ class RAGPipeline:
         return {
             "answer": ai_response,
             "citations": [c.model_dump() for c in citations],
+            "chunks": chunks,
             "chunks_used": len(chunks),
             "strategy": strategy
         }

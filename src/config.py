@@ -1,7 +1,8 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 from typing import List
-
+from pydantic import field_validator
+import os
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
@@ -22,6 +23,15 @@ class Settings(BaseSettings):
     # Supabase
     SUPABASE_API_URL: str
     SUPABASE_SERVICE_KEY: str
+    
+    @field_validator("SUPABASE_API_URL")
+    @classmethod
+    def fix_docker_internal_url(cls, v: str) -> str:
+        """Replace host.docker.internal with localhost when running outside Docker."""
+        is_in_docker = os.path.exists("/.dockerenv")
+        if "host.docker.internal" in v and not is_in_docker:
+            return v.replace("host.docker.internal", "localhost")
+        return v
     
     # Redis & Celery
     REDIS_URL: str = "redis://localhost:6379/0"

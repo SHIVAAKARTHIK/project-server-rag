@@ -154,7 +154,10 @@ async def process_url(
         document_id = document["id"]
         
         # Start Celery task
-        task = processing_document.delay(document_id)
+        task = celery_app.send_task(
+            "src.tasks.document_tasks.processing_document",
+            args=[document_id]
+        )
         
         # Store task ID
         doc_repo.update_task_id(document_id, task.id)
