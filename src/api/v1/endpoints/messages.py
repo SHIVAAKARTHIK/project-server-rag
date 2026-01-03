@@ -45,11 +45,15 @@ async def send_message(
                 detail="Project settings not found"
             )
         
-        # 3. Get document IDs
+        # 3. Get LLM provider from settings (default to openai)
+        llm_provider = settings.get("llm_provider", "openai")
+        print(f"🤖 Using LLM provider: {llm_provider}")
+
+        # 4. Get document IDs
         document_ids = doc_repo.get_document_ids(project_id)
         print(f"📄 Found {len(document_ids)} documents")
-        
-        # 4. Execute RAG pipeline
+
+        # 5. Execute RAG pipeline with provider selection
         rag = RAGPipeline()
         result = rag.process(
             query=message,
@@ -57,7 +61,7 @@ async def send_message(
             settings=settings
         )
         
-        # 5. Save AI response
+        # 6. Save AI response
         print("💾 Saving AI message...")
         ai_message = message_repo.create_assistant_message(
             chat_id=chat_id,

@@ -54,6 +54,11 @@ class RerankingModel(str, Enum):
     RERANKER_MULTILINGUAL_V3 = "reranker-multilingual-v3.0"
     NONE = "none"
 
+class LLMProvider(str, Enum):
+    """Supported LLM providers."""
+    OPENAI = "openai"
+    OLLAMA = "ollama"
+
 
 class FileType(str, Enum):
     """Supported file types for processing."""

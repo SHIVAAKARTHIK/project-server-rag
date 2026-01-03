@@ -1,5 +1,7 @@
 # =============================================================================
-# Six Figure RAG - FastAPI Dockerfile
+# Six Figure RAG - Unified Dockerfile
+# =============================================================================
+# Single image for both API and Celery worker
 # =============================================================================
 
 FROM python:3.11-slim
@@ -12,14 +14,21 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Set work directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies for document processing
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    libpq-dev \
     curl \
+    libpq-dev \
+    poppler-utils \
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    libmagic1 \
+    curl \
+    libgl1 \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv 
+# Install uv (fast Python package installer)
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:$PATH"
 
@@ -28,7 +37,7 @@ COPY requirements.txt .
 RUN UV_HTTP_TIMEOUT=300 uv pip install --system --no-cache -r requirements.txt
 
 # Copy application code
-COPY . .
+COPY src/ ./src/
 
 # Create non-root user for security
 RUN adduser --disabled-password --gecos '' appuser && \
@@ -38,9 +47,9 @@ USER appuser
 # Expose port
 EXPOSE 8000
 
-# Health check
+# Health check (using Python instead of curl since we switch to non-root user)
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
-# Run the application
+# Default command (overridden in docker-compose for celery)
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

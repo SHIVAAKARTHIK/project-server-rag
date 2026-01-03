@@ -3,16 +3,12 @@ from fastapi import APIRouter, HTTPException, status
 from src.api.deps import CurrentUser
 from src.schemas.project import (
     ProjectCreate,
-    ProjectResponse,
     ProjectSettingsUpdate,
-    ProjectSettingsResponse,
 )
-from src.schemas.common import DataResponse
 from src.services.database.repositories.project_repo import (
     ProjectRepository,
     ProjectSettingsRepository,
 )
-from src.core.exceptions import NotFoundException, AccessDeniedException
 
 router = APIRouter()
 

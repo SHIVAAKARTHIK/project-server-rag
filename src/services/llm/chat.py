@@ -1,9 +1,9 @@
 from typing import List, Any, Optional
 from functools import lru_cache
 
-from langchain_core.messages import HumanMessage, SystemMessage,BaseMessage
+from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage
 
-from src.services.llm.providers.openrouter import OpenRouterProvider
+from src.services.llm.factory import get_llm
 from src.config import settings
 
 
@@ -11,7 +11,7 @@ class ChatService:
     """Service for LLM chat completions."""
     
     def __init__(self, model: str = None, temperature: float = 0):
-        self.provider = OpenRouterProvider(
+        self.provider = get_llm(
             model=model,
             temperature=temperature
         )
@@ -54,12 +54,14 @@ class ChatService:
             
         Returns:
             LLM response content
+            
+        Note:
+            - OpenAI: Works with gpt-4o, gpt-4o-mini
+            - Ollama: Requires vision model (e.g., llava, qwen2-vl)
         """
         
-        messages = [SystemMessage(content=system_prompt)]
-        
         if images:
-            # Multi-modal message
+            # Multi-modal message with images
             content_parts = [{"type": "text", "text": user_query}]
             
             for img_base64 in images:
@@ -67,19 +69,21 @@ class ChatService:
                 if img_base64.startswith("data:image"):
                     img_base64 = img_base64.split(",", 1)[1]
                 
-                content_parts.append({  # pyright: ignore[reportArgumentType]
+                content_parts.append({
                     "type": "image_url",
                     "image_url": {"url": f"data:image/jpeg;base64,{img_base64}"}
                 })
             
-            user_message = HumanMessage(content=content_parts)  # pyright: ignore[reportArgumentType]
+            user_message = HumanMessage(content=content_parts)
         else:
-            user_message = HumanMessage(content=content_parts)  # pyright: ignore[reportUnboundVariable]
+            # Text-only message
+            user_message = HumanMessage(content=user_query)
         
         messages: List[BaseMessage] = [
-        SystemMessage(content=system_prompt),
-        user_message
-    ]
+            SystemMessage(content=system_prompt),
+            user_message
+        ]
+        
         return self.provider.invoke_with_images(messages)
 
 

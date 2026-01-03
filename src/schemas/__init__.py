@@ -41,6 +41,8 @@ from src.schemas.user import (
     WebhookHeaders,
 )
 
+from src.schemas.chunks import ChunkResponse
+
 __all__ = [
     # Common
     "ResponseBase",
@@ -79,4 +81,6 @@ __all__ = [
     "UserResponse",
     "ClerkWebhookPayload",
     "WebhookHeaders",
+    # Chunks
+    "ChunkResponse"
 ]

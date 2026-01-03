@@ -1,10 +1,7 @@
 from typing import List
 
-from langchain_core.messages import HumanMessage, SystemMessage
-
 from src.schemas.chat import QueryVariations
-from src.services.llm.chat import chat_service
-from src.services.llm.providers.openrouter import OpenRouterProvider
+from src.services.llm.factory import get_llm
 
 
 def generate_query_variations(
@@ -32,14 +29,14 @@ Use different keywords and synonyms while maintaining the same intent.
 Return exactly {num_queries - 1} variations."""
     
     try:
-        provider = OpenRouterProvider()
+        llm = get_llm()
         
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"Original query: {original_query}"}
         ]
         
-        result = provider.chat_with_structured_output(
+        result = llm.chat_with_structured_output(
             messages=messages,
             output_schema=QueryVariations
         )
@@ -82,14 +79,14 @@ Include any relevant context from the conversation that would help with document
 Return only the rewritten query, nothing else."""
     
     try:
-        provider = OpenRouterProvider()
+        llm = get_llm()
         
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"Context:\n{recent_context}\n\nQuery: {query}"}
         ]
         
-        expanded = provider.chat(messages)
+        expanded = llm.chat(messages)
         return expanded.strip()
         
     except Exception:

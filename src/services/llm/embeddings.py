@@ -1,7 +1,7 @@
 from typing import List
 from functools import lru_cache
 
-from src.services.llm.providers.openrouter import OpenRouterEmbeddingProvider
+from src.services.llm.factory import get_embeddings
 from src.config import settings
 
 
@@ -9,10 +9,8 @@ class EmbeddingService:
     """Service for generating embeddings."""
     
     def __init__(self, model: str = None, dimensions: int = None):
-        self.provider = OpenRouterEmbeddingProvider(
-            model=model,
-            dimensions=dimensions
-        )
+        self.provider = get_embeddings(model=model)
+        self.dimensions = dimensions or settings.active_embedding_dimensions
     
     def embed_query(self, text: str) -> List[float]:
         """Generate embedding for a single query."""

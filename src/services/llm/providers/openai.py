@@ -7,20 +7,19 @@ from src.config import settings
 from src.services.llm.providers.base import BaseLLMProvider, BaseEmbeddingProvider
 
 
-class OpenRouterProvider(BaseLLMProvider):
-    """OpenRouter LLM provider using LangChain."""
+class OpenAIProvider(BaseLLMProvider):
+    """OpenAI LLM provider using LangChain."""
     
     def __init__(
         self,
         model: str = None,
         temperature: float = 0
     ):
-        self.model = model or settings.DEFAULT_LLM_MODEL
+        self.model = model or settings.OPENAI_MODEL  # e.g., "gpt-4o-mini" or "gpt-4o"
         self.llm = ChatOpenAI(
             model=self.model,
             temperature=temperature,
-            openai_api_base=settings.OPENROUTER_BASE_URL,
-            openai_api_key=settings.OPENROUTER_API_KEY
+            api_key=settings.OPENAI_API_KEY
         )
     
     def chat(
@@ -32,7 +31,12 @@ class OpenRouterProvider(BaseLLMProvider):
     ) -> str:
         """Generate a chat completion."""
         langchain_messages = self._convert_messages(messages)
-        response = self.llm.invoke(langchain_messages)
+        
+        invoke_kwargs = {}
+        if max_tokens:
+            invoke_kwargs["max_tokens"] = max_tokens
+            
+        response = self.llm.invoke(langchain_messages, **invoke_kwargs)
         return response.content
     
     def chat_with_structured_output(
@@ -71,22 +75,21 @@ class OpenRouterProvider(BaseLLMProvider):
         return langchain_messages
 
 
-class OpenRouterEmbeddingProvider(BaseEmbeddingProvider):
-    """OpenRouter embedding provider using LangChain."""
+class OpenAIEmbeddingProvider(BaseEmbeddingProvider):
+    """OpenAI embedding provider using LangChain."""
     
     def __init__(
         self,
         model: str = None,
         dimensions: int = None
     ):
-        self.model = model or settings.DEFAULT_EMBEDDING_MODEL
+        self.model = model or settings.OPENAI_EMBEDDING_MODEL  # e.g., "text-embedding-3-small"
         self.dimensions = dimensions or settings.EMBEDDING_DIMENSIONS
         
         self.embeddings = OpenAIEmbeddings(
             model=self.model,
             dimensions=self.dimensions,
-            openai_api_base=settings.OPENROUTER_BASE_URL,
-            openai_api_key=settings.OPENROUTER_API_KEY
+            api_key=settings.OPENAI_API_KEY
         )
     
     def embed_query(self, text: str) -> List[float]:
@@ -100,7 +103,7 @@ class OpenRouterEmbeddingProvider(BaseEmbeddingProvider):
     def embed_batch(
         self,
         texts: List[str],
-        batch_size: int = 10
+        batch_size: int = 100  # OpenAI supports larger batches
     ) -> List[List[float]]:
         """Generate embeddings in batches to avoid API limits."""
         all_embeddings = []

@@ -1,11 +1,20 @@
-.git
-.gitignore
-__pycache__
-*.py[cod]
-.venv
-venv
-.env.*
-*.md
-tests/
-supabase/.branches
-supabase/.temp
+# =============================================================================
+# Six Figure RAG - Docker Ignore
+# =============================================================================
+# Only src/ and requirements.txt are needed for the image
+# =============================================================================
+
+# Ignore everything by default
+*
+
+# Allow only what's needed
+!src/
+!requirements.txt
+
+# Exclude from src if any
+src/__pycache__/
+src/**/__pycache__/
+src/**/*.pyc
+src/**/*.pyo
+src/**/*.pyd
+src/.pytest_cache/

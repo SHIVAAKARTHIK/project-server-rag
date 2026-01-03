@@ -11,19 +11,36 @@ from src.services.llm.chat import (
 from src.services.llm.providers import (
     BaseLLMProvider,
     BaseEmbeddingProvider,
-    OpenRouterProvider,
-    OpenRouterEmbeddingProvider,
+    OpenAIProvider,
+    OpenAIEmbeddingProvider,
+    OllamaProvider,
+    OllamaEmbeddingProvider,
+)
+from src.services.llm.factory import (
+    get_llm,
+    get_embeddings,
+    LLMProviderFactory,
 )
 
 __all__ = [
+    # Services
     "EmbeddingService",
     "embedding_service",
     "get_embedding_service",
     "ChatService",
     "chat_service",
     "get_chat_service",
+    # Factory (recommended)
+    "get_llm",
+    "get_embeddings",
+    "LLMProviderFactory",
+    # Base classes
     "BaseLLMProvider",
     "BaseEmbeddingProvider",
-    "OpenRouterProvider",
-    "OpenRouterEmbeddingProvider",
+    # OpenAI providers
+    "OpenAIProvider",
+    "OpenAIEmbeddingProvider",
+    # Ollama providers
+    "OllamaProvider",
+    "OllamaEmbeddingProvider",
 ]

@@ -20,6 +20,10 @@ class RAGPipeline:
     - hybrid: Vector + Keyword with RRF fusion
     - multi-query-vector: Multiple query variations + vector search
     - multi-query-hybrid: Multiple query variations + hybrid search
+    
+    Supports multiple LLM providers:
+    - openai: GPT-4o-mini
+    - ollama: Qwen 2.5 7B (local)
     """
     
     def __init__(self):
@@ -45,7 +49,10 @@ class RAGPipeline:
             Dict with 'answer', 'citations', and metadata
         """
         strategy = settings.get("rag_strategy", RAGStrategy.BASIC.value)
+        llm_provider = settings.get("llm_provider", "openai")
+        
         print(f"\n🔍 RAG STRATEGY: {strategy.upper()}")
+        print(f"🤖 LLM PROVIDER: {llm_provider.upper()}")
         
         # Step 1: Retrieve chunks based on strategy
         chunks = self._retrieve(query, document_ids, settings, strategy)
@@ -58,13 +65,14 @@ class RAGPipeline:
         # Step 3: Build context
         texts, images, tables, citations = build_context(chunks)
         
-        # Step 4: Generate response
-        print("🤖 Preparing context and calling LLM...")
+        # Step 4: Generate response with selected LLM provider
+        print(f"🤖 Preparing context and calling LLM ({llm_provider})...")
         ai_response = prepare_prompt_and_invoke_llm(
             user_query=query,
             texts=texts,
             images=images,
-            tables=tables
+            tables=tables,
+            llm_provider=llm_provider
         )
         
         return {
@@ -72,7 +80,8 @@ class RAGPipeline:
             "citations": [c.model_dump() for c in citations],
             "chunks": chunks,
             "chunks_used": len(chunks),
-            "strategy": strategy
+            "strategy": strategy,
+            "llm_provider": llm_provider
         }
     
     def _retrieve(

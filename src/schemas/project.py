@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 
-from src.models.enums import RAGStrategy, AgentType, EmbeddingModel, RerankingModel
+from src.models.enums import RAGStrategy, AgentType, EmbeddingModel, RerankingModel, LLMProvider
 
 
 class ProjectCreate(BaseModel):
@@ -44,6 +44,7 @@ class ProjectSettingsCreate(BaseModel):
     reranking_model: RerankingModel = RerankingModel.RERANKER_ENGLISH_V3
     vector_weight: float = Field(default=0.7, ge=0.0, le=1.0)
     keyword_weight: float = Field(default=0.3, ge=0.0, le=1.0)
+    llm_provider: LLMProvider = LLMProvider.OPENAI
 
 
 class ProjectSettingsUpdate(BaseModel):
@@ -59,6 +60,7 @@ class ProjectSettingsUpdate(BaseModel):
     reranking_model: Optional[RerankingModel] = None
     vector_weight: Optional[float] = Field(None, ge=0.0, le=1.0)
     keyword_weight: Optional[float] = Field(None, ge=0.0, le=1.0)
+    llm_provider: Optional[LLMProvider] = None
 
 
 class ProjectSettingsResponse(BaseModel):
@@ -76,6 +78,7 @@ class ProjectSettingsResponse(BaseModel):
     reranking_model: str
     vector_weight: float
     keyword_weight: float
+    llm_provider: str
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

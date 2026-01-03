@@ -11,6 +11,8 @@ python-magic
 langchain==0.3.27
 langchain-community==0.3.27
 langchain-openai==0.3.28
+langchain-ollama>=0.2.0
 unstructured[all-docs]==0.18.11
 scrapingbee
 ragas
+langgraph
