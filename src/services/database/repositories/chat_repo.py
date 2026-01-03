@@ -89,3 +89,18 @@ class MessageRepository(BaseRepository):
             "clerk_id": clerk_id,
             "citations": citations or []
         })
+
+    def get_by_chat_id(
+        self,
+        chat_id: str,
+        limit: int
+    )-> List[Dict[str, Any]]:
+        """Get last 10 messages for the chat history"""
+        result = self.db.table(self.table_name)\
+            .select("*")\
+            .eq("chat_id", chat_id)\
+            .order("created_at", desc=False)\
+            .limit(limit)\
+            .execute()
+        
+        return result.data or [] # type: ignore
