@@ -24,8 +24,7 @@ class RAGStrategy(str, Enum):
 class AgentType(str, Enum):
     """Agent behavior types."""
     AGENTIC = "agentic"
-    CONVERSATIONAL = "conversational"
-    RETRIEVAL_ONLY = "retrieval_only"
+    SIMPLE = "simple"
 
 
 class MessageRole(str, Enum):

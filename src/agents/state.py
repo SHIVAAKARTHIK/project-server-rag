@@ -92,6 +92,19 @@ class AgentState(TypedDict):
     Used by respond_node to decide response mode.
     """
     
+    # Web search fields (for agentic agent)
+    use_web_search: bool
+    """Whether agent decided to use web search."""
+    
+    web_output: str
+    """Output from web search."""
+    
+    web_sources: List[Dict[str, Any]]
+    """Sources from web search (url, title, snippet)."""
+    
+    direct_response: str
+    """Direct response from agent (when no tool used)."""
+    
     # ============== OUTPUT ==============
     # These are the final results
     
@@ -146,6 +159,10 @@ def create_initial_state(
         messages=[],
         tool_output="",
         has_results=False,
+        use_web_search=False,
+        web_output="",
+        web_sources=[],
+        direct_response="",
         response="",
         citations=[]
     )

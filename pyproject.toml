@@ -23,6 +23,7 @@ dependencies = [
     "scrapingbee>=2.0.2",
     "supabase>=2.27.0",
     "svix>=1.83.0",
+    "tavily-python>=0.7.17",
     "unstructured[all-docs]==0.18.11",
     "uvicorn>=0.38.0",
 ]

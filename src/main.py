@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
     Manages startup and shutdown events.
     """
     # Startup
-    logger.info("🚀 Starting Six Figure RAG API...")
+    logger.info("🚀 Starting RAGent API...")
     
     # Check Redis connection
     if redis_service.ping():
@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown
-    logger.info("👋 Shutting down Six Figure RAG API...")
+    logger.info("👋 Shutting down RAGent API...")
 
 
 # Create FastAPI application
@@ -74,7 +74,7 @@ app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 async def root():
     """Root endpoint."""
     return {
-        "message": "Welcome to Six Figure RAG API",
+        "message": "Welcome to RAGent API",
         "version": "1.0.0",
         "docs": f"{settings.API_V1_PREFIX}/docs"
     }

@@ -9,6 +9,7 @@ from src.services.database.repositories.project_repo import (
     ProjectRepository,
     ProjectSettingsRepository,
 )
+from src.services.database.repositories.chat_repo import ChatRepository
 
 router = APIRouter()
 
@@ -47,7 +48,7 @@ async def create_project(project_data: ProjectCreate, clerk_id: CurrentUser):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Failed to create project settings - project creation rolled back"
-            )
+            ) from e
         
         return {
             "message": "Project created successfully",
@@ -60,7 +61,7 @@ async def create_project(project_data: ProjectCreate, clerk_id: CurrentUser):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create project: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/{project_id}")
@@ -167,9 +168,7 @@ async def update_project_settings(
 
 @router.get("/{project_id}/chats")
 async def get_project_chats(project_id: str, clerk_id: CurrentUser):
-    """Get all chats for a project."""
-    from src.services.database.repositories.chat_repo import ChatRepository
-    
+    """Get all chats for a project."""   
     chat_repo = ChatRepository()
     chats = chat_repo.get_by_project(project_id, clerk_id)
     

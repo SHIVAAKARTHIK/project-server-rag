@@ -1,5 +1,5 @@
 # =============================================================================
-# Six Figure RAG - Docker Compose Configuration
+# RAGent - Docker Compose Configuration
 # =============================================================================
 # Uses single image for both API and Celery worker
 # =============================================================================

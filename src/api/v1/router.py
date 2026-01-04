@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from src.api.v1.endpoints import projects, files, chats, messages,webhooks,chunks
+from src.api.v1.endpoints import projects, files, chats, messages,webhooks,chunks, streaming
 
 api_router = APIRouter()
 
@@ -38,4 +38,10 @@ api_router.include_router(
     chunks.router,
     prefix="/chunks", 
     tags=["chunks"]
+)
+
+api_router.include_router(
+    streaming.router,
+    prefix="/projects", 
+    tags=["streaming"]
 )

@@ -1,11 +1,10 @@
 from fastapi import APIRouter, HTTPException, status
-
 from src.api.deps import CurrentUser
 from src.schemas.chat import SendMessageRequest
 from src.services.database.repositories.chat_repo import MessageRepository
 from src.services.database.repositories.project_repo import ProjectSettingsRepository
 from src.services.database.repositories.document_repo import DocumentRepository
-from src.agents import run_simple_agent
+from src.agents import run_simple_agent,run_agentic_agent
 
 router = APIRouter()
 
@@ -50,9 +49,10 @@ async def send_message(
                 detail="Project settings not found"
             )
         
-        # 3. Get LLM provider from settings (default to openai)
+        # 3. Get agent type from settings (default to simple)
+        agent_type = settings.get("agent_type", "simple")
         llm_provider = settings.get("llm_provider", "openai")
-        print(f"🤖 Using LLM provider: {llm_provider}")
+        print(f"🤖 Using agent: {agent_type}, provider: {llm_provider}")
 
         # 4. Get document IDs
         document_ids = doc_repo.get_document_ids(project_id)
@@ -62,16 +62,26 @@ async def send_message(
         chat_history = _load_chat_history(chat_id)
         print(f"💬 Loaded {len(chat_history)} history messages")
 
-        # 6. Run the Simple Agent
-        print("🤖 Running Simple Agent...")
-        result = run_simple_agent(
-            query=message,
-            chat_history=chat_history,
-            document_ids=document_ids,
-            settings=settings
-        )
-        print(f"✅ Agent response received (tool_used: {result.tool_used})")
+        # 6. Run the appropriate agent
+        if agent_type == "agentic":
+            print("🚀 Running Agentic Agent (RAG + Web Search)...")
+            result = run_agentic_agent(
+                query=message,
+                chat_history=chat_history,
+                document_ids=document_ids,
+                settings=settings
+            )
+        else:
+            print("🚀 Running Simple Agent (RAG only)...")
+            result = run_simple_agent(
+                query=message,
+                chat_history=chat_history,
+                document_ids=document_ids,
+                settings=settings
+            )
         
+        print("✅ Agent response received")
+
         # 7. Save AI response
         print("💾 Saving AI message...")
         ai_message = message_repo.create_assistant_message(
@@ -94,12 +104,10 @@ async def send_message(
         raise
     except Exception as e:
         print(f"❌ Error in send_message: {str(e)}")
-        import traceback
-        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
-        )
+        ) from e
 
 
 def _load_chat_history(chat_id: str, limit: int = 10) -> list:

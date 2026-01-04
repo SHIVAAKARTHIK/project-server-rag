@@ -87,6 +87,10 @@ class Settings(BaseSettings):
     # ScrapingBee (for URL processing)
     # =========================================================================
     SCRAPINGBEE_API_KEY: str
+    # =========================================================================
+    # Tavily API key
+    # =========================================================================
+    TAVILY_API_KEY: str = os.getenv("TAVILY_API_KEY", "")
     
     # =========================================================================
     # Computed Properties for Active Provider

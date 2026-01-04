@@ -16,3 +16,4 @@ unstructured[all-docs]==0.18.11
 scrapingbee
 ragas
 langgraph
+tavily-python
