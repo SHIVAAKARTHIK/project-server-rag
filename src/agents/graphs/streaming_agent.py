@@ -48,6 +48,14 @@ DIRECT_RESPONSE_PROMPT = """You are a helpful AI assistant.
 Answer based on your general knowledge. Be friendly and conversational.
 """
 
+NO_DOCS_FOUND_PROMPT = """You are a helpful AI assistant.
+The user asked a question but no relevant information was found in their documents.
+
+Let them know politely that you couldn't find relevant information in their uploaded documents.
+If you can provide general knowledge about the topic, do so briefly.
+Suggest they might want to upload more relevant documents or rephrase their question.
+"""
+
 
 async def stream_agentic_agent(
     query: str,
@@ -58,15 +66,25 @@ async def stream_agentic_agent(
     """
     Stream agentic agent with guardrails.
     
+    Respects agent_type setting:
+    - "simple": RAG only, no web search
+    - "agentic": RAG + Web Search fallback
+    
     Yields:
         {"type": "status", "content": "..."}
         {"type": "token", "content": "..."}
         {"type": "citations", "content": [...]}
+        {"type": "web_sources", "content": [...]}
         {"type": "guardrail_blocked", "content": "...", "category": "..."}
         {"type": "done"}
     """
+    # Get agent type from settings (default to "agentic" for backward compatibility)
+    agent_type = settings.get("agent_type", "agentic")
+    is_simple_agent = agent_type == "simple"
+    
     print("\n" + "="*60)
     print("🚀 STREAMING AGENT - Starting")
+    print(f"🤖 Agent Type: {agent_type.upper()}")
     print(f"📝 Query: {mask_pii(query[:100])}...")
     print("="*60)
     
@@ -125,6 +143,7 @@ async def stream_agentic_agent(
     full_response = ""
     
     if has_results:
+        # Found in documents - same for both agent types
         yield {"type": "status", "content": "✅ Found in documents! Generating answer..."}
         yield {"type": "citations", "content": citations}
         
@@ -133,38 +152,51 @@ async def stream_agentic_agent(
             yield {"type": "token", "content": token}
     
     else:
-        yield {"type": "status", "content": "🤔 Not found in documents. Checking if web search needed..."}
+        # Not found in documents - behavior differs by agent type
         
-        use_web = await _should_use_web_search(llm, query)
+        if is_simple_agent:
+            # ==================== SIMPLE AGENT: NO WEB SEARCH ====================
+            print("📋 Simple Agent: Skipping web search, responding with general knowledge")
+            yield {"type": "status", "content": "📝 No relevant documents found. Generating response..."}
+            
+            async for token in _stream_llm_response(llm, query, "", "no_docs"):
+                full_response += token
+                yield {"type": "token", "content": token}
         
-        if use_web:
-            yield {"type": "status", "content": "🌐 Searching the web..."}
+        else:
+            # ==================== AGENTIC AGENT: WEB SEARCH FALLBACK ====================
+            yield {"type": "status", "content": "🤔 Not found in documents. Checking if web search needed..."}
             
-            try:
-                web_context, web_sources = execute_web_search(query)
-                print(f"🌐 Web: {len(web_sources)} sources")
-            except Exception as e:
-                print(f"❌ Web error: {e}")
-                web_context = ""
-                web_sources = []
+            use_web = await _should_use_web_search(llm, query)
             
-            if web_sources:
-                yield {"type": "web_sources", "content": web_sources}
-                yield {"type": "status", "content": "📝 Generating answer from web..."}
+            if use_web:
+                yield {"type": "status", "content": "🌐 Searching the web..."}
                 
-                async for token in _stream_llm_response(llm, query, web_context, "web"):
-                    full_response += token
-                    yield {"type": "token", "content": token}
+                try:
+                    web_context, web_sources = execute_web_search(query)
+                    print(f"🌐 Web: {len(web_sources)} sources")
+                except Exception as e:
+                    print(f"❌ Web error: {e}")
+                    web_context = ""
+                    web_sources = []
+                
+                if web_sources:
+                    yield {"type": "web_sources", "content": web_sources}
+                    yield {"type": "status", "content": "📝 Generating answer from web..."}
+                    
+                    async for token in _stream_llm_response(llm, query, web_context, "web"):
+                        full_response += token
+                        yield {"type": "token", "content": token}
+                else:
+                    yield {"type": "status", "content": "📝 Generating response..."}
+                    async for token in _stream_llm_response(llm, query, "", "direct"):
+                        full_response += token
+                        yield {"type": "token", "content": token}
             else:
                 yield {"type": "status", "content": "📝 Generating response..."}
                 async for token in _stream_llm_response(llm, query, "", "direct"):
                     full_response += token
                     yield {"type": "token", "content": token}
-        else:
-            yield {"type": "status", "content": "📝 Generating response..."}
-            async for token in _stream_llm_response(llm, query, "", "direct"):
-                full_response += token
-                yield {"type": "token", "content": token}
     
     # ==================== GUARDRAILS: OUTPUT CHECK ====================
     output_result = check_output_guardrails(full_response, query)
@@ -176,7 +208,7 @@ async def stream_agentic_agent(
 
 
 async def _should_use_web_search(llm, query: str) -> bool:
-    """Ask LLM if web search is needed."""
+    """Ask LLM if web search is needed (only used by Agentic Agent)."""
     tools = [web_search_tool]
     llm_with_tools = llm.bind_tools(tools)
     
@@ -202,6 +234,8 @@ async def _stream_llm_response(llm, query: str, context: str, mode: str) -> Asyn
         system_prompt = DOC_RESPONSE_PROMPT.format(context=context)
     elif mode == "web":
         system_prompt = WEB_RESPONSE_PROMPT.format(context=context)
+    elif mode == "no_docs":
+        system_prompt = NO_DOCS_FOUND_PROMPT
     else:
         system_prompt = DIRECT_RESPONSE_PROMPT
     

@@ -32,8 +32,6 @@
 - [Environment Variables](#-environment-variables)
 - [Usage](#-usage)
 - [Guardrails](#-guardrails)
-- [Contributing](#-contributing)
-- [License](#-license)
 
 ---
 
@@ -68,6 +66,7 @@
 | 🔍 **Agentic RAG** | Intelligent agent that decides: RAG → Web Search → Direct Response |
 | 📊 **Multiple RAG Strategies** | Basic, Hybrid Search, Multi-Query with Reciprocal Rank Fusion |
 | 🌐 **Web Search Fallback** | Tavily integration for real-time web information |
+| 🕷️ **Website Scraping** | ScrapingBee integration for extracting content from URLs |
 | ⚡ **Real-time Streaming** | Token-by-token response streaming with status updates |
 | 📎 **Citation System** | Clickable citations with chunk preview modal |
 | 🛡️ **Safety Guardrails** | Input/output validation for toxic content, prompt injection, PII |
@@ -287,6 +286,7 @@ about your documents."
 | ![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4-412991?style=flat-square&logo=openai&logoColor=white) | GPT-4 | Primary LLM |
 | ![Ollama](https://img.shields.io/badge/Ollama-Llama3-000000?style=flat-square) | Llama3 | Local LLM (optional) |
 | ![Tavily](https://img.shields.io/badge/Tavily-API-blue?style=flat-square) | Latest | Web search |
+| ![ScrapingBee](https://img.shields.io/badge/ScrapingBee-API-yellow?style=flat-square) | Latest | Website scraping |
 | ![Redis](https://img.shields.io/badge/Redis-7.0-DC382D?style=flat-square&logo=redis&logoColor=white) | 7.0 | Message queue |
 | ![Celery](https://img.shields.io/badge/Celery-5.3-37814A?style=flat-square&logo=celery&logoColor=white) | 5.3 | Task processing |
 
@@ -325,6 +325,7 @@ about your documents."
 |----------|--------------|
 | `OPENAI_API_KEY` | https://platform.openai.com/api-keys |
 | `TAVILY_API_KEY` | https://tavily.com |
+| `SCRAPINGBEE_API_KEY` | https://www.scrapingbee.com |
 | `SUPABASE_URL` | Supabase Dashboard → Settings → API |
 | `SUPABASE_SERVICE_KEY` | Supabase Dashboard → Settings → API |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | https://dashboard.clerk.com |
@@ -402,6 +403,9 @@ OPENAI_API_KEY=sk-your-openai-api-key
 # Tavily Web Search (Required for web search feature)
 TAVILY_API_KEY=tvly-your-tavily-key
 
+# ScrapingBee (Required for website scraping)
+SCRAPINGBEE_API_KEY=your-scrapingbee-api-key
+
 # Supabase (Required)
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_KEY=your-service-key
@@ -443,15 +447,6 @@ The migrations will run in this order:
 2. `20250103000001_add_llm_provider.sql` - Project settings table
 3. `20251214083612_chunk_search_function.sql` - Vector similarity search function
 
-### Option B: Hosted Supabase (Production)
-
-```bash
-# Link to your Supabase project
-npx supabase link --project-ref your-project-ref
-
-# Push migrations to remote
-npx supabase db push
-```
 
 ### Verify Setup
 
@@ -646,6 +641,7 @@ ragent/
 # ==================== LLM Providers ====================
 OPENAI_API_KEY=sk-...                    # Required
 TAVILY_API_KEY=tvly-...                  # Required for web search
+SCRAPINGBEE_API_KEY=...                  # Required for website scraping
 
 # ==================== Database ====================
 SUPABASE_URL=https://xxx.supabase.co     # Required
@@ -775,6 +771,7 @@ Message > 16,000 chars        → ❌ BLOCKED
 - [LangGraph](https://langchain-ai.github.io/langgraph/) - Agent framework
 - [OpenAI](https://openai.com) - LLM provider
 - [Tavily](https://tavily.com) - Web search API
+- [ScrapingBee](https://www.scrapingbee.com) - Website scraping API
 - [Supabase](https://supabase.com) - Database & vector store
 - [Clerk](https://clerk.com) - Authentication
 
